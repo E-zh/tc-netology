@@ -9,11 +9,10 @@ module "compute_instance" {
   create_default_security_group = true
 
   ipv4_private_address = "10.10.10.10"
-  nat_ip_address       = "1.0.0.1"
 
   username = "default"
   password = "hashed_password"
-  ssh_key  = file("~/.ssh/id_rsa.pub")
+  #ssh_key  = file("~/.ssh/id_rsa.pub")
 
   allow_stopping_for_update = true
 
