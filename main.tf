@@ -1,56 +1,78 @@
-terraform {
-  required_providers {
-    yandex = {
-      source = "yandex-cloud/yandex"
-    }
-  }
-  required_version = ">= 0.13"
-}
+module "compute_instance" {
+  source          = "github.com/darzanebor/terraform-yandex-compute-instance.git"
+  name            = "my-vm"
+  zone            = "ru-central1-a"
+  platform_id     = "standard-v1"
+  vpc_subnet_name = "ru-central1-a"
 
-provider yandex {
-  token     = var.yc_token
-  #ervice_account_key_file = file("key.json")
-  cloud_id  = var.yc_cloud_id
-  folder_id = var.yc_folder_id
-  zone      = "ru-central1-a"
-}
+  vpc_security_groups           = ["sg-default"]
+  create_default_security_group = true
 
-resource yandex_compute_image ubu-img {
-  name         = "ubuntu-2204-lts"
-  source_image = "fd8smb7fj0o91i68s15v"
-}
+  ipv4_private_address = "10.10.10.10"
+  nat_ip_address       = "1.0.0.1"
 
-resource "yandex_vpc_network" "net" {
-  name = "netology"
-}
+  username = "default"
+  password = "hashed_password"
+  ssh_key  = file("~/.ssh/id_rsa.pub")
 
-resource "yandex_vpc_subnet" "subnet" {
-  name           = "subnetology"
-  zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.net.id
-  v4_cidr_blocks = ["192.168.1.0/24"]
-}
+  allow_stopping_for_update = true
 
-resource "yandex_compute_instance" "netology" {
-  name = "netology"
+  allocate_ipv4 = true
+  allocate_ipv6 = false
+  allocate_nat  = false
 
-  resources {
-    cores  = "2"
-    memory = "4"
+  resources = {
+    cores         = 2
+    memory        = 4
+    core_fraction = null
   }
 
-  boot_disk {
-    initialize_params {
-      image_id = yandex_compute_image.ubu-img.id
+  boot_disk = {
+    name     = "boot-disk-my-vm"
+    type     = "network-ssd"
+    zone     = "ru-central1-a"
+    image_id = "fd8smb7fj0o91i68s15v"
+    labels   = {
+      environment = "test"
     }
   }
 
-  network_interface {
-    subnet_id = yandex_vpc_subnet.subnet.id
-    nat       = true
+  dns_record = {
+    zone_name = "my-dns-zone"
+    fqdn      = "my-vm.my-dns-zone.com."
+    ttl       = "3600"
+    ptr       = true
   }
 
-  metadata = {
-    user-data = file("meta.txt")
+  nat_dns_record = {
+    zone_name = "my-dns-zone"
+    fqdn      = "my-vm.my-dns-zone.com."
+    ttl       = "3600"
+    ptr       = true
   }
+
+  ipv6_dns_record = {
+    zone_name = "my-dns-zone"
+    fqdn      = "my-vm.my-dns-zone.com."
+    ttl       = "3600"
+    ptr       = true
+  }
+
+  default_security_group_ingress = [
+    {
+      protocol       = "TCP"
+      description    = "Allow All ingress."
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = -1
+    },
+  ]
+  default_security_group_egress = [
+    {
+      protocol       = "ANY"
+      description    = "Allow All egress."
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      from_port      = -1
+      to_port        = -1
+    },
+  ]
 }
