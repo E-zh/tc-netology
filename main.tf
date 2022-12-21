@@ -1,85 +1,21 @@
-provider yandex {
-  token     = var.yc_token
-  cloud_id  = var.yc_cloud_id
-  folder_id = var.yc_folder_id
-  zone      = "ru-central1-a"
-}
+module "compute" {
+  source  = "glavk/compute/yandex"
+  version = "0.1.13"
 
-module "compute_instance" {
-  source          = "github.com/darzanebor/terraform-yandex-compute-instance.git"
-  token           = var.yc_token
-  name            = "my-vm"
-  zone            = "ru-central1-a"
-  platform_id     = "standard-v1"
-  vpc_subnet_name = "ru-central1-a"
+  image_family = "ubuntu-2204-lts"
+  subnet       = "sn-dev-0"
+  folder_id    = var.yc_folder_id
 
-  vpc_security_groups           = ["sg-default"]
-  create_default_security_group = true
+  name     = "development"
+  hostname = "dev"
+  is_nat   = false
 
-  ipv4_private_address = "10.10.10.10"
+  cores  = 2
+  memory = 4
+  size   = "10"
 
-  username = "default"
-  password = "hashed_password"
-  #ssh_key  = file("~/.ssh/id_rsa.pub")
+  preemptible = true
 
-  allow_stopping_for_update = true
+  sg_id = ["xxx"]
 
-  allocate_ipv4 = true
-  allocate_ipv6 = false
-  allocate_nat  = false
-
-  resources = {
-    cores         = 2
-    memory        = 4
-    core_fraction = null
-  }
-
-  boot_disk = {
-    name     = "boot-disk-my-vm"
-    type     = "network-ssd"
-    zone     = "ru-central1-a"
-    image_id = "fd8smb7fj0o91i68s15v"
-    labels   = {
-      environment = "test"
-    }
-  }
-
-  dns_record = {
-    zone_name = "my-dns-zone"
-    fqdn      = "my-vm.my-dns-zone.com."
-    ttl       = "3600"
-    ptr       = true
-  }
-
-  nat_dns_record = {
-    zone_name = "my-dns-zone"
-    fqdn      = "my-vm.my-dns-zone.com."
-    ttl       = "3600"
-    ptr       = true
-  }
-
-  ipv6_dns_record = {
-    zone_name = "my-dns-zone"
-    fqdn      = "my-vm.my-dns-zone.com."
-    ttl       = "3600"
-    ptr       = true
-  }
-
-  default_security_group_ingress = [
-    {
-      protocol       = "TCP"
-      description    = "Allow All ingress."
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = -1
-    },
-  ]
-  default_security_group_egress = [
-    {
-      protocol       = "ANY"
-      description    = "Allow All egress."
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      from_port      = -1
-      to_port        = -1
-    },
-  ]
 }
