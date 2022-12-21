@@ -1,6 +1,6 @@
 module "compute_instance" {
   source          = "github.com/darzanebor/terraform-yandex-compute-instance.git"
-  token     = var.yc_token
+  token           = var.yc_token
   name            = "my-vm"
   zone            = "ru-central1-a"
   platform_id     = "standard-v1"
